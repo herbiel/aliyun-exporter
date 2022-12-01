@@ -1,32 +1,31 @@
-package slb
+package polardb
 
 import (
-	"net/http"
-
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
-	"github.com/aliyun/alibaba-cloud-sdk-go/services/slb"
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/polardb"
 	"github.com/go-kit/kit/log"
 	"github.com/prometheus/client_golang/prometheus"
+	"net/http"
 
 	"github.com/fengxsong/aliyun-exporter/pkg/client/service"
 )
 
 // constants
 const (
-	name     = "slb"
+	name     = "polardb"
 	pageSize = 100
 )
 
 // Client wrap client
 type Client struct {
-	*slb.Client
+	*polardb.Client
 	desc   *prometheus.Desc
 	logger log.Logger
 }
 
 // New create ServiceCollector
 func New(ak, secret, region string, rt http.RoundTripper, logger log.Logger) (service.Collector, error) {
-	client, err := slb.NewClientWithAccessKey(region, ak, secret)
+	client, err := polardb.NewClientWithAccessKey(region, ak, secret)
 	if err != nil {
 		return nil, err
 	}
@@ -37,31 +36,31 @@ func New(ak, secret, region string, rt http.RoundTripper, logger log.Logger) (se
 // Collect collect metrics
 func (c *Client) Collect(namespace string, ch chan<- prometheus.Metric) {
 	if c.desc == nil {
-		c.desc = service.NewInstanceClientDesc(namespace, name, []string{"regionId", "instanceId", "name", "address", "status"})
+		c.desc = service.NewInstanceClientDesc(namespace, name, []string{"regionId", "dbInstanceId", "dbType", "desc", "status"})
 	}
-	req := slb.CreateDescribeLoadBalancersRequest()
-	req.PageSize = requests.NewInteger(pageSize)
-	instanceCh := make(chan slb.LoadBalancer, 1<<10)
+	req := polardb.CreateDescribeDBClustersRequest()
+	req.PageNumber = requests.NewInteger(pageSize)
+	instanceCh := make(chan polardb.DBCluster, 1<<10)
 	go func() {
 		defer close(instanceCh)
 		for hasNextPage, pageNum := true, 1; hasNextPage != false; pageNum++ {
 			req.PageNumber = requests.NewInteger(pageNum)
-			response, err := c.DescribeLoadBalancers(req)
+			response, err := c.DescribeDBClusters(req)
 			if err != nil {
 				return
 			}
-			if len(response.LoadBalancers.LoadBalancer) < pageSize {
+			if len(response.Items.DBCluster) < pageSize {
 				hasNextPage = false
 			}
-			for i := range response.LoadBalancers.LoadBalancer {
-				instanceCh <- response.LoadBalancers.LoadBalancer[i]
+			for i := range response.Items.DBCluster {
+				instanceCh <- response.Items.DBCluster[i]
 			}
 		}
 	}()
 
 	for ins := range instanceCh {
 		ch <- prometheus.MustNewConstMetric(c.desc, prometheus.GaugeValue, 1.0,
-			ins.RegionId, ins.LoadBalancerId, ins.LoadBalancerName, ins.Address, ins.LoadBalancerStatus)
+			ins.RegionId, ins.DBClusterId, ins.DBClusterNetworkType, ins.DBClusterDescription, ins.DBClusterStatus)
 	}
 }
 

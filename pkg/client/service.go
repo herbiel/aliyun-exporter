@@ -10,6 +10,7 @@ import (
 	_ "github.com/fengxsong/aliyun-exporter/pkg/client/dds"
 	_ "github.com/fengxsong/aliyun-exporter/pkg/client/ecs"
 	_ "github.com/fengxsong/aliyun-exporter/pkg/client/es"
+	_ "github.com/fengxsong/aliyun-exporter/pkg/client/polardb"
 	_ "github.com/fengxsong/aliyun-exporter/pkg/client/rds"
 	_ "github.com/fengxsong/aliyun-exporter/pkg/client/redis"
 	_ "github.com/fengxsong/aliyun-exporter/pkg/client/slb"

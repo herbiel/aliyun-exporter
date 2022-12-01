@@ -36,6 +36,7 @@ var allNamespaces = map[string]string{
 	"acs_nat_gateway":                "NAT Gateway",
 	"acs_anycast_eip":                "Anycast Elastic IP address (EIP)",
 	"acs_rds_dashboard":              "ApsaraDB RDS",
+	"acs_polardb":                    "Polardb",
 	"acs_mongodb":                    "ApsaraDB for MongoDB",
 	"acs_memcache":                   "ApsaraDB for Memcache",
 	"acs_kvstore":                    "ApsaraDB for Redis",
